@@ -1,203 +1,49 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="el">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Κώφ/λαλοι — Speech>Text & Text>Speech (MVP)</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ξ•Ο†Ξ±ΟΞΌΞΏΞ³Ξ® Ξ³ΞΉΞ± ΞΟΟ†Ξ±Ξ»ΞΏΟ…Ο‚</title>
   <style>
-    :root{font-family:Arial,Helvetica,sans-serif}
-    body{display:flex;flex-direction:column;gap:12px;max-width:900px;margin:28px auto;padding:12px}
-    h1{font-size:20px;margin:6px 0}
-    .card{border:1px solid #ddd;border-radius:12px;padding:14px;box-shadow:0 4px 10px rgba(0,0,0,0.03)}
-    .controls{display:flex;gap:8px;flex-wrap:wrap}
-    button{font-size:16px;padding:12px 16px;border-radius:10px;border:none;cursor:pointer;background:#0a84ff;color:#fff}
-    button.secondary{background:#6c757d}
-    button.danger{background:#e63946}
-    #transcript{min-height:140px;padding:12px;border-radius:8px;background:#fafafa;border:1px dashed #e0e0e0;white-space:pre-wrap;font-size:18px}
-    label{font-weight:600}
-    textarea{width:100%;min-height:100px;padding:12px;font-size:16px;border-radius:8px;border:1px solid #ddd}
-    .small{font-size:13px;color:#666}
-    .status{margin-top:6px;font-size:13px;color:#333}
-    .big{font-size:20px}
-    @media (max-width:520px){button{flex:1}}
+    body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+    button { padding: 10px 20px; font-size: 16px; }
+    #output { margin-top: 20px; font-size: 18px; }
   </style>
 </head>
 <body>
-  <h1>Μετάφραση ομιλίας σε κείμενο & κείμενο σε ομιλία — Έκδοση demo</h1>
+  <h1>ΞΞ±Ξ»Ο‰ΟƒΞ®ΟΞΈΞ±Ο„Ξµ ΟƒΟ„Ξ·Ξ½ ΞµΟ†Ξ±ΟΞΌΞΏΞ³Ξ® Ξ³ΞΉΞ± ΞΟΟ†Ξ±Ξ»ΞΏΟ…Ο‚!</h1>
+  <p>Ξ Ξ±Ο„Ξ®ΟƒΟ„Ξµ Ο„ΞΏ ΞΊΞΏΟ…ΞΌΟ€Ξ― ΞΊΞ±ΞΉ ΞΌΞΉΞ»Ξ®ΟƒΟ„Ξµ:</p>
+  <button id="startBtn">ΞΞµΞΊΞ―Ξ½Ξ± Ξ‘Ξ½Ξ±Ξ³Ξ½ΟΟΞΉΟƒΞ· Ξ¦Ο‰Ξ½Ξ®Ο‚</button>
+  <div id="output"></div>
 
-  <div class="card">
-    <label class="big">Live Speech > Text</label>
-    <div class="controls" style="margin-top:10px">
-      <button id="startBtn">> Έναρξη Αναγνώρισης</button>
-      <button id="stopBtn" class="secondary">¦ Σταμάτημα</button>
-      <button id="clearBtn" class="danger">?? Εκκαθάριση</button>
-    </div>
-    <div id="transcript" aria-live="polite" role="status" tabindex="0">Πίεσε "Έναρξη Αναγνώρισης" και μίλα — τα λόγια θα εμφανιστούν εδώ.</div>
-    <div class="status small" id="srStatus">Κατάσταση: Αδρανής</div>
-  </div>
+  <script>
+    const btn = document.getElementById('startBtn');
+    const output = document.getElementById('output');
 
-  <div class="card">
-    <label class="big">Text > Speech</label>
-    <textarea id="textToSpeak" placeholder="Γράψε κάτι εδώ..."></textarea>
-    <div class="controls" style="margin-top:10px">
-      <button id="speakBtn">?? Άκου</button>
-      <button id="stopSpeakBtn" class="secondary">¦ Σταμάτημα</button>
-    </div>
-    <div class="small" style="margin-top:8px">
-      Επιλογή φωνής:
-      <select id="voiceSelect"></select>
-      <span style="margin-left:12px">Ταχύτητα: <input id="rate" type="range" min="0.6" max="1.6" value="1" step="0.1"></span>
-    </div>
-  </div>
+    // ΞΞ»ΞµΞ³Ο‡ΞΏΟ‚ Ξ±Ξ½ ΞΏ browser Ο…Ο€ΞΏΟƒΟ„Ξ·ΟΞ―Ξ¶ΞµΞΉ SpeechRecognition
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      output.textContent = "Ξ browser ΟƒΞ±Ο‚ Ξ΄ΞµΞ½ Ο…Ο€ΞΏΟƒΟ„Ξ·ΟΞ―Ξ¶ΞµΞΉ Ξ±Ξ½Ξ±Ξ³Ξ½ΟΟΞΉΟƒΞ· Ο†Ο‰Ξ½Ξ®Ο‚.";
+      btn.disabled = true;
+    } else {
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'el-GR';
+      recognition.interimResults = false;
 
-  <div class="card">
-    <label>Ρυθμίσεις & Οδηγίες</label>
-    <ul class="small">
-      <li>Για καλύτερο αποτέλεσμα μίλα κοντά στο μικρόφωνο και σε ήσυχο περιβάλλον.</li>
-      <li>Ο browser θα ζητήσει άδεια για το μικρόφωνο — δώσε την.</li>
-      <li>Σε κινητό: χρειάζεται HTTPS (ή τοπικό server) για να λειτουργήσει το μικρόφωνο.</li>
-      <li>Αν ο browser σου δεν υποστηρίζει αναγνώριση ομιλίας, θα ενημερωθείς στην κατάσταση.</li>
-    </ul>
-  </div>
+      btn.addEventListener('click', () => {
+        output.textContent = "Ξ‘ΞΊΞΏΟΟ‰...";
+        recognition.start();
+      });
 
-<script>
-/* --- Speech Recognition (Web Speech API) --- */
-const startBtn = document.getElementById('startBtn');
-const stopBtn = document.getElementById('stopBtn');
-const clearBtn = document.getElementById('clearBtn');
-const transcriptEl = document.getElementById('transcript');
-const srStatus = document.getElementById('srStatus');
+      recognition.addEventListener('result', (event) => {
+        const transcript = event.results[0][0].transcript;
+        output.textContent = `Ξ•Ξ―Ο€Ξ±Ο„Ξµ: "${transcript}"`;
+      });
 
-let recognition = null;
-let recognizing = false;
-function supportsSpeechRecognition(){
-  return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
-}
-
-if (supportsSpeechRecognition()){
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  recognition = new SpeechRecognition();
-  recognition.lang = 'el-GR'; // ελληνικά — αλλά αν δεν δουλέψει, αλλαξε σε 'en-US' για αγγλικά
-  recognition.interimResults = true;
-  recognition.maxAlternatives = 1;
-  recognition.continuous = true;
-
-  recognition.onstart = () => {
-    recognizing = true;
-    srStatus.textContent = 'Κατάσταση: Αναγνωρίζω (μιλάτε τώρα)';
-    startBtn.textContent = '?? Αναγνωρίζω...';
-    startBtn.disabled = true;
-  };
-
-  recognition.onerror = (e) => {
-    console.error('Speech recognition error', e);
-    srStatus.textContent = 'Σφάλμα αναγνώρισης: ' + (e.error || 'unknown');
-    startBtn.disabled = false;
-  };
-
-  recognition.onend = () => {
-    recognizing = false;
-    srStatus.textContent = 'Κατάσταση: Σταμάτησε';
-    startBtn.textContent = '> Έναρξη Αναγνώρισης';
-    startBtn.disabled = false;
-  };
-
-  let finalTranscript = '';
-  recognition.onresult = (event) => {
-    let interim = '';
-    for (let i = event.resultIndex; i < event.results.length; ++i) {
-      const transcript = event.results[i][0].transcript;
-      if (event.results[i].isFinal) {
-        finalTranscript += transcript + '\n';
-      } else {
-        interim += transcript;
-      }
+      recognition.addEventListener('end', () => {
+        // ΞΟ€ΞΏΟΞµΞ―Ο‚ Ξ½Ξ± Ξ±Ο†Ξ®ΟƒΞµΞΉΟ‚ ΞΊΞµΞ½Ο Ξ® Ξ½Ξ± ΞµΟ€Ξ±Ξ½ΞµΞΊΞΊΞΉΞ½Ξ®ΟƒΞµΞΉΟ‚ Ξ±Ο…Ο„ΟΞΌΞ±Ο„Ξ±
+      });
     }
-    transcriptEl.textContent = finalTranscript + interim;
-  };
-} else {
-  srStatus.textContent = 'Ο browser σου ΔΕΝ υποστηρίζει Web Speech API (SpeechRecognition). Δοκίμασε Chrome/Edge.';
-  startBtn.disabled = true;
-  stopBtn.disabled = true;
-}
-
-startBtn.addEventListener('click', () => {
-  if (recognition && !recognizing) {
-    try {
-      recognition.start();
-    } catch(e){
-      // κάποιες φορές το start πετάει αν κλήθηκε ήδη
-      console.warn(e);
-    }
-  }
-});
-stopBtn.addEventListener('click', () => {
-  if (recognition && recognizing) recognition.stop();
-});
-clearBtn.addEventListener('click', () => {
-  transcriptEl.textContent = '';
-});
-
-/* --- Text to Speech (speechSynthesis) --- */
-const speakBtn = document.getElementById('speakBtn');
-const stopSpeakBtn = document.getElementById('stopSpeakBtn');
-const textToSpeak = document.getElementById('textToSpeak');
-const voiceSelect = document.getElementById('voiceSelect');
-const rateInput = document.getElementById('rate');
-
-let voices = [];
-function populateVoices(){
-  voices = speechSynthesis.getVoices().sort((a,b) => a.name.localeCompare(b.name));
-  voiceSelect.innerHTML = '';
-  voices.forEach((v,i) => {
-    const opt = document.createElement('option');
-    opt.value = i;
-    opt.textContent = `${v.name} ${v.lang ? '— '+v.lang : ''}`;
-    voiceSelect.appendChild(opt);
-  });
-}
-populateVoices();
-if (speechSynthesis.onvoiceschanged !== undefined) {
-  speechSynthesis.onvoiceschanged = populateVoices;
-}
-
-let utterance = null;
-speakBtn.addEventListener('click', () => {
-  const text = textToSpeak.value.trim();
-  if (!text) return alert('Γράψε πρώτα κάτι στο πλαίσιο κειμένου.');
-  if (speechSynthesis.speaking) speechSynthesis.cancel();
-
-  utterance = new SpeechSynthesisUtterance(text);
-  const sel = voiceSelect.value;
-  if (voices[sel]) utterance.voice = voices[sel];
-  utterance.rate = parseFloat(rateInput.value) || 1.0;
-  // Προσάρμοσε γλώσσα αν θέλεις: utterance.lang = 'el-GR';
-  // Αν η voice έχει γλώσσα, δεν χρειάζεται να την ορίσουμε
-  utterance.onstart = () => speakBtn.textContent = '?? Παίζει...';
-  utterance.onend = () => speakBtn.textContent = '?? Άκου';
-  utterance.onerror = (e) => { console.error(e); speakBtn.textContent = '?? Άκου'; alert('Σφάλμα TTS'); };
-  speechSynthesis.speak(utterance);
-});
-stopSpeakBtn.addEventListener('click', () => {
-  if (speechSynthesis.speaking) speechSynthesis.cancel();
-});
-
-/* --- Extra: copy transcript to clipboard (double click) --- */
-transcriptEl.addEventListener('dblclick', async () => {
-  try {
-    await navigator.clipboard.writeText(transcriptEl.textContent);
-    alert('Το κείμενο αντιγράφηκε στο πρόχειρο (clipboard).');
-  } catch(e) {
-    alert('Αδύνατο να αντιγραφεί (πρόβλημα δικαιωμάτων).');
-  }
-});
-
-/* Accessibility: focus transcript when updated for screen readers */
-const observer = new MutationObserver(() => {
-  transcriptEl.setAttribute('aria-live','polite');
-});
-observer.observe(transcriptEl, {characterData:true, childList:true, subtree:true});
-
-</script>
+  </script>
 </body>
 </html>
