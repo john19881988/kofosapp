@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="el">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Εφαρμογή για Κόφαλους</title>
+  <title>Εφαρμογή για κωφάλαλους</title>
   <style>
     body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
     button { padding: 10px 20px; font-size: 16px; }
@@ -11,7 +11,7 @@
   </style>
 </head>
 <body>
-  <h1>Καλωσήρθατε στην εφαρμογή για Κόφαλους!</h1>
+  <h1>Καλωσήρθατε στην εφαρμογή για κωφάλαλους!</h1>
   <p>Πατήστε το κουμπί και μιλήστε:</p>
   <button id="startBtn">Ξεκίνα Αναγνώριση Φωνής</button>
   <div id="output"></div>
@@ -31,7 +31,7 @@
       recognition.interimResults = false;
 
       btn.addEventListener('click', () => {
-        output.textContent = "Ακούω...";
+        output.textContent = "Σας ακούω...";
         recognition.start();
       });
 
